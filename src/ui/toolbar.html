@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+  <title>Plain Browser 주소창</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f5f6;color:#25332e;font:13px "Segoe UI","Malgun Gothic",sans-serif;overflow:hidden}
+    .bar{height:60px;padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #dce3df}
+    button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:38px;width:auto;padding:0 11px;border:1px solid #c4d0ca;border-radius:8px;background:#fff;color:#254b3c;font:600 13px "Segoe UI","Malgun Gothic",sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px #1b3b2910;transition:background .12s,border-color .12s,transform .12s}button svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}button:hover:not(:disabled){background:#dceee4;border-color:#378261;color:#123e29}button:active:not(:disabled){transform:translateY(1px);background:#cce5d7}button:focus-visible{outline:2px solid #23755c;outline-offset:2px}button:disabled{color:#9aa89f;background:#edf1ee;border-color:#dde4df;box-shadow:none;cursor:default}
+    form{display:flex;gap:8px;flex:1;min-width:0;margin-left:6px}input{width:100%;min-width:0;height:38px;border:1px solid #c8d4cd;border-radius:8px;background:white;padding:0 12px;font:14px "Segoe UI","Malgun Gothic",sans-serif;outline:none}input:focus{border-color:#23755c;box-shadow:0 0 0 2px #23755c22}.go{background:#23755c;border-color:#23755c;color:white;padding:0 14px}.go:hover:not(:disabled){background:#16563f;border-color:#16563f;color:#fff}.status{height:30px;padding:4px 16px;color:#617368;font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+    .footer{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;height:30px;gap:8px;border-top:1px solid #dce3df;background:#f3f5f6}.footer .status{flex:1;min-width:0;height:auto;padding:0 16px}.shield{height:24px;padding:0 10px;margin-right:12px;border-color:transparent;background:transparent;box-shadow:none;font-size:12px;color:#23755c}.shield[aria-pressed="false"]{color:#896023}.is-loading svg{animation:rotate 1s linear infinite}@keyframes rotate{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.is-loading svg{animation:none}button{transition:none}}
+    .tab-strip{height:42px;display:flex;align-items:flex-end;gap:8px;padding:5px 14px 0;background:#e7ede9;border-bottom:1px solid #cdd8d0}
+    .tab-list{display:flex;gap:5px;flex:0 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#b8c8bd transparent;user-select:none;touch-action:none}
+    .tab{display:flex;align-items:center;flex:0 0 190px;max-width:220px;min-width:130px;height:34px;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:#dce5df;color:#607567}
+    .tab.selected{background:#f3f5f6;border-color:#c4d0ca;color:#204a36}
+    .tab.dragging{opacity:.8;border-color:#23755c;background:#d4eadc}.tab:focus-within{border-color:#23755c}.tab-title{cursor:grab}.tab.dragging .tab-title{cursor:grabbing}
+    .tab-title{height:33px;flex:1;min-width:0;justify-content:flex-start;padding:0 9px;border:0;border-radius:7px 0 0 0;box-shadow:none;background:transparent;font-size:12px;color:inherit}
+    .tab-title:hover:not(:disabled){background:#d1e4d8;border-color:transparent}.tab-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tab-close{width:24px;height:24px;padding:4px;margin-right:5px;border:0;background:transparent;box-shadow:none;color:#668172;border-radius:5px}.tab-close svg{width:14px;height:14px;stroke-width:2}
+    .tab-close:hover:not(:disabled){background:#c6dace;color:#173f2c}.tab-add{width:31px;height:30px;padding:5px;margin-bottom:3px;border:0;background:transparent;box-shadow:none}.tab-add svg{width:19px;height:19px}
+    .tab-title:active:not(:disabled),.tab-close:active:not(:disabled){transform:none}
+    .tab-title:focus-visible,.tab-close:focus-visible{outline:none;box-shadow:inset 0 0 0 1px #23755c}
+    .tab-dot{width:7px;height:7px;border-radius:50%;background:#6c9a80;flex-shrink:0}.tab.loading .tab-dot{width:10px;height:10px;border:2px solid #bdd5c6;border-top-color:#23755c;background:transparent;animation:rotate 1s linear infinite}
+    @media(prefers-reduced-motion:reduce){.tab.loading .tab-dot{animation:none}}
+    @media(max-width:760px){.tab-strip{padding-left:10px;padding-right:10px}}
+  </style>
+</head>
+<body>
+  <div class="tab-strip">
+    <div id="tabs" class="tab-list" role="tablist" aria-label="열린 탭"></div>
+    <button id="new-tab" class="tab-add" type="button" title="새 탭" aria-label="새 탭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div class="bar">
+    <button id="back" type="button" title="이전 페이지" aria-label="이전 페이지" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-7 7 7 7M4 12h16"/></svg></button>
+    <button id="forward" type="button" title="다음 페이지" aria-label="다음 페이지" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 5 7 7-7 7M4 12h16"/></svg></button>
+    <button id="reload" type="button" title="새로고침" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0-.7 6M20 4v6h-6"/></svg></button>
+    <form id="navigation" autocomplete="off">
+      <input id="address" aria-label="웹 주소" placeholder="웹 주소 입력 · example.com" spellcheck="false" autofocus>
+      <button class="go" type="submit" title="이동" aria-label="이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button>
+    </form>
+  </div>
+  <footer class="footer" aria-label="상태 표시줄"><div id="status" class="status" role="status" aria-live="polite">준비</div><button id="blocking" class="shield" type="button" aria-pressed="true" title="광고차단을 켜거나 끄고 현재 페이지를 다시 엽니다.">광고차단 ON</button></footer>
+  <script>
+    const address = document.getElementById('address');
+    const send = command => window.ipc.postMessage(JSON.stringify(command));
+    const tabList = document.getElementById('tabs');
+    let activeTab = null;
+    let tabsState = [];
+    let tabsSignature = '';
+    let latestState = null;
+    let drag = null;
+    let suppressClick = false;
+    document.getElementById('new-tab').addEventListener('click', () => send({action:'new_tab'}));
+    tabList.addEventListener('click', event => {
+      if (suppressClick) { event.preventDefault(); return; }
+      const close = event.target.closest('.tab-close');
+      if (close) { send({action:'close_tab', id:Number(close.dataset.tabId)}); return; }
+      const tab = event.target.closest('.tab-title');
+      if (tab) send({action:'select_tab', id:Number(tab.dataset.tabId)});
+    });
+    tabList.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || event.target.closest('.tab-close')) return;
+      const title = event.target.closest('.tab-title');
+      if (title) drag = {id:Number(title.dataset.tabId),pointerId:event.pointerId,x:event.clientX,y:event.clientY,dragging:false};
+    });
+    tabList.addEventListener('pointermove', event => {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!drag.dragging && Math.hypot(event.clientX-drag.x,event.clientY-drag.y) < 5) return;
+      const group = tabList.querySelector(`.tab[data-tab-id="${drag.id}"]`);
+      if (!group) { drag = null; return; }
+      if (!drag.dragging) {
+        drag.dragging = true;
+        group.classList.add('dragging');
+        try { tabList.setPointerCapture(event.pointerId); } catch (_) { /* Pointer may already be canceled. */ }
+      }
+      event.preventDefault();
+      const edge = tabList.getBoundingClientRect();
+      if (event.clientX < edge.left+24) tabList.scrollLeft -= 12;
+      else if (event.clientX > edge.right-24) tabList.scrollLeft += 12;
+      const others = [...tabList.querySelectorAll('.tab')].filter(node => node !== group);
+      const before = others.find(node => { const rect=node.getBoundingClientRect(); return event.clientX < rect.left+rect.width/2; });
+      tabList.insertBefore(group,before || null);
+    });
+    function finishDrag(event, canceled) {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const ended = drag;
+      drag = null;
+      try { if(tabList.hasPointerCapture(event.pointerId)) tabList.releasePointerCapture(event.pointerId); } catch (_) {}
+      if (!ended.dragging) return;
+      const group = tabList.querySelector(`.tab[data-tab-id="${ended.id}"]`);
+      group?.classList.remove('dragging');
+      suppressClick = true;
+      setTimeout(() => { suppressClick=false; },0);
+      tabsSignature = '';
+      if (canceled) { if(latestState) renderTabs(latestState); return; }
+      const next = group?.nextElementSibling;
+      send({action:'move_tab',id:ended.id,before:next ? Number(next.dataset.tabId) : null});
+    }
+    tabList.addEventListener('pointerup', event => finishDrag(event,false));
+    tabList.addEventListener('pointercancel', event => finishDrag(event,true));
+    tabList.addEventListener('keydown', event => {
+      if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+      event.preventDefault();
+      const index = tabsState.findIndex(tab => tab.id === activeTab);
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabsState.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabsState.length) % tabsState.length;
+      if (tabsState[next]) send({action:'select_tab',id:tabsState[next].id});
+    });
+    function renderTabs(state) {
+      tabsState = state.tabs;
+      if (drag?.dragging) return;
+      const signature = JSON.stringify([state.active_tab,state.tabs]);
+      if (signature === tabsSignature) return;
+      tabsSignature = signature;
+      tabsState = state.tabs;
+      const fragment = document.createDocumentFragment();
+      for (const tab of state.tabs) {
+        const selected = tab.id === state.active_tab;
+        const group = document.createElement('div');
+        group.className = `tab${selected ? ' selected' : ''}${tab.loading ? ' loading' : ''}`;
+        group.dataset.tabId = tab.id;
+        const select = document.createElement('button');
+        select.type = 'button'; select.className = 'tab-title'; select.dataset.tabId = tab.id;
+        select.setAttribute('role','tab'); select.setAttribute('aria-selected',String(selected)); select.tabIndex = selected ? 0 : -1; select.title = tab.title;
+        const dot = document.createElement('span'); dot.className = 'tab-dot'; dot.setAttribute('aria-hidden','true');
+        const label = document.createElement('span'); label.className = 'tab-label'; label.textContent = tab.title;
+        select.append(dot,label);
+        const close = document.createElement('button'); close.type = 'button'; close.className = 'tab-close'; close.dataset.tabId = tab.id;
+        close.title = '탭 닫기'; close.setAttribute('aria-label',`${tab.title} 탭 닫기`);
+        const icon = document.createElementNS('http://www.w3.org/2000/svg','svg'); icon.setAttribute('viewBox','0 0 24 24'); icon.setAttribute('aria-hidden','true');
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path'); path.setAttribute('d','m6 6 12 12M6 18 18 6'); icon.append(path); close.append(icon);
+        group.append(select,close); fragment.append(group);
+      }
+      tabList.replaceChildren(fragment);
+      if (activeTab !== state.active_tab) tabList.querySelector(`[data-tab-id="${state.active_tab}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});
+    }
+    document.getElementById('blocking').addEventListener('click', () => send({action: 'toggle_blocking'}));
+    let currentAddress = '';
+    window.focusAddress = () => { address.focus(); address.select(); };
+    for (const action of ['back', 'forward', 'reload']) {
+      document.getElementById(action).addEventListener('click', () => send({action}));
+    }
+    document.getElementById('navigation').addEventListener('submit', event => {
+      event.preventDefault();
+      send({action: 'navigate', address: address.value});
+      address.blur();
+    });
+    address.addEventListener('focus', () => address.select());
+    address.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { address.value = currentAddress; address.blur(); }
+    });
+    window.updateState = state => {
+      latestState = state;
+      currentAddress = state.address;
+      renderTabs(state);
+      if (activeTab !== state.active_tab || document.activeElement !== address) address.value = state.address;
+      activeTab = state.active_tab;
+      document.getElementById('back').disabled = !state.back;
+      document.getElementById('forward').disabled = !state.forward;
+      const status = document.getElementById('status');
+      status.setAttribute('aria-live',state.hovered_link ? 'off' : 'polite');
+      status.textContent = state.hovered_link || state.status;
+      status.title = state.hovered_link || '';
+      const reload = document.getElementById('reload');
+      reload.classList.toggle('is-loading', state.loading);
+      reload.setAttribute('aria-busy', String(state.loading));
+      const blocking = document.getElementById('blocking');
+      blocking.textContent = `광고차단 ${state.blocking_enabled ? 'ON' : 'OFF'}`;
+      blocking.setAttribute('aria-pressed', String(state.blocking_enabled));
+    };
+    send({action: 'ready'});
+  </script>
+</body>
+</html>

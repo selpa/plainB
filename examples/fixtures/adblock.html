@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Local adblock check</title></head>
+<body>
+  <div id="publisher-ad">Publisher's directly embedded promotional content</div>
+  <script>window.staticAd=false; window.publisherLoaded=false; window.normalLoaded=false;</script>
+  <script src="/ads/publisher.js"></script>
+  <script src="http://127.0.0.1:__PORT__/content.js"></script>
+  <script src="http://127.0.0.1:__PORT__/ad-network/static.js" onload="window.staticAd=true"></script>
+  <script>
+    const thirdParty = 'http://127.0.0.1:__PORT__';
+    const script = url => new Promise(resolve => {
+      const node = document.createElement('script');
+      node.onload = () => resolve(true);
+      node.onerror = () => resolve(false);
+      node.src = url;
+      document.body.appendChild(node);
+    });
+    const image = url => new Promise(resolve => {
+      const node = new Image();
+      node.onload = () => resolve(true);
+      node.onerror = () => resolve(false);
+      node.src = url;
+      document.body.appendChild(node);
+    });
+    const frame = url => new Promise(resolve => {
+      const node = document.createElement('iframe');
+      node.onload = () => resolve();
+      node.onerror = () => resolve();
+      node.src = url;
+      document.body.appendChild(node);
+    });
+    window.addEventListener('load', async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const [late_ad, image_ad, fetch_ad] = await Promise.all([
+        script(thirdParty + '/ad-network/late.js'),
+        image(thirdParty + '/ad-network/banner.svg'),
+        fetch(thirdParty + '/ad-network/data').then(r => r.ok).catch(() => false),
+        frame(thirdParty + '/ad-network/frame.html'),
+      ]);
+      window.ipc.postMessage(JSON.stringify({
+        static_ad: window.staticAd, late_ad, image_ad, fetch_ad,
+        publisher: window.publisherLoaded,
+        normal: window.normalLoaded,
+        inline: document.getElementById('publisher-ad').textContent.includes('Publisher'),
+      }));
+    });
+  </script>
+</body></html>

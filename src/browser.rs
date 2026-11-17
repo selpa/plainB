@@ -236,11 +236,14 @@ impl Browser {
             .with_inner_size(LogicalSize::new(1120.0, 780.0))
             .with_min_inner_size(LogicalSize::new(640.0, 420.0))
             .build(event_loop)?;
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(if checking {
-            "work/tabs-check-profile"
+        let path = if checking {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("work/tabs-check-profile")
         } else {
-            "work/webview2"
-        });
+            std::env::current_exe()?
+                .parent()
+                .ok_or("실행 파일 폴더를 찾을 수 없습니다.")?
+                .join("data/webview2")
+        };
         std::fs::create_dir_all(&path)?;
         let mut context = WebContext::new(Some(path));
         let proxy = event_loop.create_proxy();

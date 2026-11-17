@@ -1,0 +1,22 @@
+EasyList snapshot, unmodified
+Source: https://easylist.to/easylist/easylist.txt
+Authors: The EasyList authors (https://easylist.to/)
+Retrieved for Plain Browser on 2026-11-13.
+List version: 202611131402
+Source commit: 8c0d711df02af3594147ff49e6f3ffa660c32f09
+SHA256: F8DB3ACE8E91354E0CD1916AF1D54497F2A48BF8A781C04676378531A2809BCF
+
+The list is dual licensed under GPL-3.0-or-later or CC-BY-SA-3.0-or-later.
+This bundled copy is provided under CC-BY-SA-3.0.
+License: https://creativecommons.org/licenses/by-sa/3.0/legalcode
+Upstream license information: https://easylist.to/pages/licence.html
+The snapshot is not automatically updated. Preserve its headers and attribution.
+
+Plain Browser loads only network rules and applies them only to third-party
+requests. It does not apply cosmetic hiding, scriptlets, CSP injection, redirect
+resources, or parameter rewriting. Same-site publisher resources and top-level
+navigation are allowed by design.
+
+adblock-rust (Rust crate: adblock), by the Brave authors, is MPL-2.0 licensed.
+Source: https://github.com/brave/adblock-rust
+License: https://github.com/brave/adblock-rust/blob/master/LICENSE

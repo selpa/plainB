@@ -1,5 +1,6 @@
 pub mod address;
 pub mod blocking;
+pub mod popups;
 pub mod tabs;
 #[cfg(windows)]
 pub mod windows_blocking;

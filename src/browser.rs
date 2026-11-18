@@ -6,6 +6,7 @@ mod tab_check;
 use plain_browser::{
     address,
     blocking::AdBlocker,
+    popups,
     tabs::{TabId, Tabs},
     windows_blocking, windows_links, windows_navigation,
 };
@@ -61,6 +62,11 @@ enum Command {
     SelectTab { id: TabId },
     CloseTab { id: TabId },
     MoveTab { id: TabId, before: Option<TabId> },
+    PopupMenu { open: bool },
+    PopupOnce { id: TabId },
+    PopupAlways { id: TabId },
+    PopupRevoke { id: TabId },
+    PopupDismiss { id: TabId },
 }
 enum BrowserEvent {
     Command(Command),
@@ -88,6 +94,8 @@ struct Tab {
     status: String,
     loading: bool,
     hovered_link: String,
+    pending_popup: Option<String>,
+    popup_opened: u8,
 }
 #[derive(Serialize)]
 struct TabSummary<'a> {
@@ -106,6 +114,10 @@ struct ToolbarState<'a> {
     loading: bool,
     blocking_enabled: bool,
     hovered_link: &'a str,
+    popup_host: Option<String>,
+    popup_target: Option<&'a str>,
+    popup_allowed: bool,
+    popup_menu: bool,
 }
 fn bounds(window: &Window, toolbar: bool) -> Rect {
     let size = window.inner_size().to_logical::<f64>(window.scale_factor());
@@ -211,6 +223,8 @@ fn create_tab(
         status: "준비".into(),
         loading: true,
         hovered_link: String::new(),
+        pending_popup: None,
+        popup_opened: 0,
     })
 }
 
@@ -222,6 +236,8 @@ struct Browser {
     blocker: Rc<AdBlocker>,
     proxy: EventLoopProxy<BrowserEvent>,
     checking: bool,
+    popup_permissions: popups::Permissions,
+    popup_menu: bool,
 }
 impl Browser {
     fn new(event_loop: &EventLoop<BrowserEvent>, checking: bool) -> AppResult<Self> {
@@ -245,6 +261,7 @@ impl Browser {
                 .join("data/webview2")
         };
         std::fs::create_dir_all(&path)?;
+        let popup_permissions = popups::Permissions::load(path.join("popup-permissions.json"))?;
         let mut context = WebContext::new(Some(path));
         let proxy = event_loop.create_proxy();
         let ipc = proxy.clone();
@@ -274,6 +291,8 @@ impl Browser {
             blocker: Rc::new(AdBlocker::default()),
             proxy,
             checking,
+            popup_permissions,
+            popup_menu: false,
         };
         browser.add_tab()?;
         Ok(browser)
@@ -305,7 +324,20 @@ impl Browser {
     fn resize(&self) -> wry::Result<()> {
         self.toolbar.set_bounds(bounds(&self.window, true))?;
         for (_, tab) in self.tabs.iter() {
-            tab.view.set_bounds(bounds(&self.window, false))?;
+            let mut rect = bounds(&self.window, false);
+            if self.popup_menu {
+                let size = self
+                    .window
+                    .inner_size()
+                    .to_logical::<f64>(self.window.scale_factor());
+                rect.position = LogicalPosition::new(0.0, BAR_HEIGHT + 170.0).into();
+                rect.size = LogicalSize::new(
+                    size.width,
+                    (size.height - BAR_HEIGHT - 170.0 - STATUS_HEIGHT).max(1.0),
+                )
+                .into();
+            }
+            tab.view.set_bounds(rect)?;
         }
         Ok(())
     }
@@ -331,6 +363,11 @@ impl Browser {
             loading: active.loading,
             blocking_enabled: self.blocker.enabled(),
             hovered_link: &active.hovered_link,
+            popup_host: popups::host(&active.url).filter(|_| active.url != HOME_URL),
+            popup_target: active.pending_popup.as_deref(),
+            popup_allowed: popups::host(&active.url)
+                .is_some_and(|host| self.popup_permissions.allows(&host)),
+            popup_menu: self.popup_menu,
         };
         self.window.set_title(&format!(
             "{} — Plain Browser",
@@ -352,14 +389,57 @@ impl Browser {
     }
     fn command(&mut self, command: Command) -> AppResult<()> {
         match command {
+            Command::PopupMenu { open } => {
+                self.popup_menu = open;
+                self.resize()?;
+            }
+            Command::PopupOnce { id }
+            | Command::PopupAlways { id }
+            | Command::PopupRevoke { id }
+            | Command::PopupDismiss { id } => {
+                if self.tabs.active_id() != Some(id) {
+                    return Ok(());
+                }
+                let tab = self.tabs.get_mut(id).unwrap();
+                let Some(host) = popups::host(&tab.url).filter(|_| tab.url != HOME_URL) else {
+                    return Ok(());
+                };
+                if matches!(
+                    command,
+                    Command::PopupAlways { .. } | Command::PopupRevoke { .. }
+                ) {
+                    self.popup_permissions
+                        .set(host, matches!(command, Command::PopupAlways { .. }))?;
+                }
+                let target = if matches!(
+                    command,
+                    Command::PopupOnce { .. } | Command::PopupAlways { .. }
+                ) {
+                    tab.pending_popup.take()
+                } else if matches!(command, Command::PopupDismiss { .. }) {
+                    tab.pending_popup = None;
+                    None
+                } else {
+                    None
+                };
+                self.popup_menu = false;
+                self.resize()?;
+                if let Some(target) = target {
+                    self.open_external(&target)?;
+                }
+            }
             Command::NewTab => {
+                self.popup_menu = false;
                 self.add_tab()?;
+                self.resize()?;
                 if !self.checking {
                     self.toolbar.focus()?;
                     self.toolbar.evaluate_script("window.focusAddress()")?;
                 }
             }
             Command::SelectTab { id } => {
+                self.popup_menu = false;
+                self.resize()?;
                 if self.tabs.select(id) {
                     self.tabs.get_mut(id).unwrap().hovered_link.clear();
                     self.show_active()?;
@@ -369,6 +449,8 @@ impl Browser {
                 }
             }
             Command::CloseTab { id } => {
+                self.popup_menu = false;
+                self.resize()?;
                 if self.tabs.get(id).is_none() {
                     return Ok(());
                 }
@@ -420,6 +502,37 @@ impl Browser {
         Ok(())
     }
     fn page_event(&mut self, id: TabId, event: PageEvent) {
+        if let PageEvent::OpenLink {
+            url,
+            user_initiated: false,
+        } = &event
+        {
+            if !address::allowed_navigation(url) || url == "about:blank" {
+                return;
+            }
+            let Some(tab) = self.tabs.get_mut(id) else {
+                return;
+            };
+            let allowed =
+                popups::host(&tab.url).is_some_and(|host| self.popup_permissions.allows(&host));
+            // Bound automatic bursts; subsequent requests remain reviewable.
+            if allowed && tab.popup_opened < 5 {
+                tab.popup_opened += 1;
+                if let Err(error) = self.open_external(url) {
+                    self.notice(format!("팝업을 열지 못했습니다: {error}"));
+                }
+            } else {
+                if tab.pending_popup.is_none() {
+                    tab.pending_popup = Some(url.clone());
+                }
+                tab.status = "팝업을 차단했습니다. 주소창 옆 팝업 버튼에서 확인하세요.".into();
+            }
+            return;
+        }
+        if matches!(event, PageEvent::Navigation(_)) && self.tabs.active_id() == Some(id) {
+            self.popup_menu = false;
+            let _ = self.resize();
+        }
         // Cross-site navigation is deferred until the native callback has returned.
         let external = match &event {
             PageEvent::OpenExternal(url) => Some(url.clone()),
@@ -449,6 +562,8 @@ impl Browser {
         };
         match event {
             PageEvent::Navigation(url) => {
+                tab.pending_popup = None;
+                tab.popup_opened = 0;
                 tab.hovered_link.clear();
                 tab.url = url;
                 tab.loading = true;
@@ -484,7 +599,9 @@ impl Browser {
         }
     }
     fn open_external(&mut self, url: &str) -> AppResult<()> {
+        self.popup_menu = false;
         let id = self.add_tab()?;
+        self.resize()?;
         let tab = self.tabs.get_mut(id).unwrap();
         tab.loading = true;
         tab.url = url.to_owned();

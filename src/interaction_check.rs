@@ -39,7 +39,7 @@ impl InteractionCheck {
             return Err("interaction check incomplete".into());
         }
         println!(
-            "PASS: native hover status; same-site/current and cross-site/new tab; typed addresses/back/forward remain current; target=_blank; pointer reorder both directions preserves selection and pages."
+            "PASS: native hover, links, history, reorder; square buttons; popup block, allow once, persistent permission, automatic allow, revoke and dismiss."
         );
         Ok(())
     }
@@ -256,6 +256,132 @@ impl InteractionCheck {
                     self.fail("reordering selected a different tab");
                     return;
                 }
+                let _ = browser
+                    .proxy
+                    .send_event(BrowserEvent::Command(Command::PopupRevoke {
+                        id: self.third,
+                    }));
+                self.step = 15;
+            }
+            15 if !browser.popup_permissions.allows("plain-check.other.test") => {
+                Self::protocol(
+                    &active.view,
+                    "Runtime.evaluate",
+                    serde_json::json!({"expression":"window.open('/popup-once')", "userGesture":false}),
+                );
+                self.step = 16;
+            }
+            16 if active.pending_popup.is_some() => {
+                if browser.tabs.len() != 3 {
+                    self.fail("blocked popup created a tab");
+                    return;
+                }
+                Self::toolbar(browser, "document.getElementById('popups').click()");
+                self.step = 17;
+            }
+            17 if browser.popup_menu => {
+                Self::evaluate(
+                    browser,
+                    &browser.toolbar,
+                    "!document.getElementById('popup-panel').hidden && ['back','forward','reload','popups'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();return r.width===38 && r.height===38}) && (()=>{const r=document.querySelector('.go').getBoundingClientRect();return r.width===38 && r.height===38})()",
+                );
+                self.step = 18;
+            }
+            18 => {
+                if let Some(json) = self.received.take() {
+                    if json != "true" {
+                        self.fail("popup panel or square button geometry incorrect");
+                        return;
+                    }
+                    Self::toolbar(browser, "document.getElementById('popup-once').click()");
+                    self.step = 19;
+                }
+            }
+            19 if browser.tabs.len() == 4
+                && !active.loading
+                && active.url.ends_with("/popup-once") =>
+            {
+                if browser.popup_permissions.allows("plain-check.other.test") {
+                    self.fail("allow once persisted permission");
+                    return;
+                }
+                let _ = browser
+                    .proxy
+                    .send_event(BrowserEvent::Command(Command::SelectTab { id: self.third }));
+                self.step = 20;
+            }
+            20 if browser.tabs.active_id() == Some(self.third) => {
+                Self::protocol(
+                    &active.view,
+                    "Runtime.evaluate",
+                    serde_json::json!({"expression":"window.open('/popup-always')", "userGesture":false}),
+                );
+                self.step = 21;
+            }
+            21 if active.pending_popup.is_some() => {
+                Self::toolbar(
+                    browser,
+                    "document.getElementById('popups').click();document.getElementById('popup-permission').click()",
+                );
+                self.step = 22;
+            }
+            22 if browser.tabs.len() == 5
+                && !active.loading
+                && active.url.ends_with("/popup-always") =>
+            {
+                if !browser.popup_permissions.allows("plain-check.other.test") {
+                    self.fail("always allow not saved");
+                    return;
+                }
+                let _ = browser
+                    .proxy
+                    .send_event(BrowserEvent::Command(Command::SelectTab { id: self.third }));
+                self.step = 23;
+            }
+            23 if browser.tabs.active_id() == Some(self.third) => {
+                Self::protocol(
+                    &active.view,
+                    "Runtime.evaluate",
+                    serde_json::json!({"expression":"window.open('/popup-auto')", "userGesture":false}),
+                );
+                self.step = 24;
+            }
+            24 if browser.tabs.len() == 6
+                && !active.loading
+                && active.url.ends_with("/popup-auto") =>
+            {
+                let _ = browser
+                    .proxy
+                    .send_event(BrowserEvent::Command(Command::SelectTab { id: self.third }));
+                self.step = 25;
+            }
+            25 if browser.tabs.active_id() == Some(self.third) => {
+                Self::toolbar(
+                    browser,
+                    "document.getElementById('popups').click();document.getElementById('popup-permission').click()",
+                );
+                self.step = 26;
+            }
+            26 if !browser.popup_permissions.allows("plain-check.other.test") => {
+                Self::protocol(
+                    &active.view,
+                    "Runtime.evaluate",
+                    serde_json::json!({"expression":"window.open('/popup-denied')", "userGesture":false}),
+                );
+                self.step = 27;
+            }
+            27 if active.pending_popup.is_some() => {
+                if browser.tabs.len() != 6 {
+                    self.fail("revoked permission still allowed popup");
+                    return;
+                }
+                Self::toolbar(
+                    browser,
+                    "document.getElementById('popups').click();document.getElementById('popup-dismiss').click()",
+                );
+                self.step = 28;
+            }
+            28 if active.pending_popup.is_none() && !browser.popup_menu => {
                 self.step = 30;
             }
             _ => {}

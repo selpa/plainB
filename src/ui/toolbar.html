@@ -8,7 +8,7 @@
   <style>
     *{box-sizing:border-box}body{margin:0;background:#f3f5f6;color:#25332e;font:13px "Segoe UI","Malgun Gothic",sans-serif;overflow:hidden}
     .bar{height:60px;padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #dce3df}
-    button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:38px;width:auto;padding:0 11px;border:1px solid #c4d0ca;border-radius:8px;background:#fff;color:#254b3c;font:600 13px "Segoe UI","Malgun Gothic",sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px #1b3b2910;transition:background .12s,border-color .12s,transform .12s}button svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}button:hover:not(:disabled){background:#dceee4;border-color:#378261;color:#123e29}button:active:not(:disabled){transform:translateY(1px);background:#cce5d7}button:focus-visible{outline:2px solid #23755c;outline-offset:2px}button:disabled{color:#9aa89f;background:#edf1ee;border-color:#dde4df;box-shadow:none;cursor:default}
+    button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:38px;width:auto;padding:0 11px;border:1px solid #c4d0ca;border-radius:8px;background:#fff;color:#254b3c;font:600 13px "Segoe UI","Malgun Gothic",sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px #1b3b2910;transition:background .12s,border-color .12s,transform .12s}button svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}button:hover:not(:disabled){background:#dceee4;border-color:#378261;color:#123e29}button:active:not(:disabled){transform:translateY(1px);background:#cce5d7}button:focus-visible{outline:2px solid #23755c;outline-offset:2px}button:disabled{color:#9aa89f;background:#edf1ee;border-color:#dde4df;box-shadow:none;cursor:default}
     form{display:flex;gap:8px;flex:1;min-width:0;margin-left:6px}input{width:100%;min-width:0;height:38px;border:1px solid #c8d4cd;border-radius:8px;background:white;padding:0 12px;font:14px "Segoe UI","Malgun Gothic",sans-serif;outline:none}input:focus{border-color:#23755c;box-shadow:0 0 0 2px #23755c22}.go{background:#23755c;border-color:#23755c;color:white;padding:0 14px}.go:hover:not(:disabled){background:#16563f;border-color:#16563f;color:#fff}.status{height:30px;padding:4px 16px;color:#617368;font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
     .footer{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;height:30px;gap:8px;border-top:1px solid #dce3df;background:#f3f5f6}.footer .status{flex:1;min-width:0;height:auto;padding:0 16px}.shield{height:24px;padding:0 10px;margin-right:12px;border-color:transparent;background:transparent;box-shadow:none;font-size:12px;color:#23755c}.shield[aria-pressed="false"]{color:#896023}.is-loading svg{animation:rotate 1s linear infinite}@keyframes rotate{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.is-loading svg{animation:none}button{transition:none}}
     .tab-strip{height:42px;display:flex;align-items:flex-end;gap:8px;padding:5px 14px 0;background:#e7ede9;border-bottom:1px solid #cdd8d0}
@@ -18,13 +18,16 @@
     .tab.dragging{opacity:.8;border-color:#23755c;background:#d4eadc}.tab:focus-within{border-color:#23755c}.tab-title{cursor:grab}.tab.dragging .tab-title{cursor:grabbing}
     .tab-title{height:33px;flex:1;min-width:0;justify-content:flex-start;padding:0 9px;border:0;border-radius:7px 0 0 0;box-shadow:none;background:transparent;font-size:12px;color:inherit}
     .tab-title:hover:not(:disabled){background:#d1e4d8;border-color:transparent}.tab-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .tab-close{width:24px;height:24px;padding:4px;margin-right:5px;border:0;background:transparent;box-shadow:none;color:#668172;border-radius:5px}.tab-close svg{width:14px;height:14px;stroke-width:2}
+    .tab-close{width:24px;height:24px;padding:4px;margin-right:5px;border:0;background:transparent;box-shadow:none;color:#668172;border-radius:5px}.tab-close svg{width:14px;height:14px;stroke-width:1.8}
     .tab-close:hover:not(:disabled){background:#c6dace;color:#173f2c}.tab-add{width:31px;height:30px;padding:5px;margin-bottom:3px;border:0;background:transparent;box-shadow:none}.tab-add svg{width:19px;height:19px}
     .tab-title:active:not(:disabled),.tab-close:active:not(:disabled){transform:none}
     .tab-title:focus-visible,.tab-close:focus-visible{outline:none;box-shadow:inset 0 0 0 1px #23755c}
     .tab-dot{width:7px;height:7px;border-radius:50%;background:#6c9a80;flex-shrink:0}.tab.loading .tab-dot{width:10px;height:10px;border:2px solid #bdd5c6;border-top-color:#23755c;background:transparent;animation:rotate 1s linear infinite}
     @media(prefers-reduced-motion:reduce){.tab.loading .tab-dot{animation:none}}
     @media(max-width:760px){.tab-strip{padding-left:10px;padding-right:10px}}
+    .bar>button,.bar .go{width:38px;height:38px;padding:0;flex:0 0 38px}
+    #popups{position:relative}#popups.has-pending{border-color:#b37718;color:#895800}#popups.has-pending::after{content:'';position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#bd7517}#popups.is-allowed{border-color:#23755c}
+    .popup-panel{position:absolute;top:102px;left:0;right:0;height:170px;padding:12px 16px;background:#f3f5f6;border-bottom:1px solid #c4d0ca}.popup-panel[hidden]{display:none}.popup-panel p{margin:0 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.popup-actions{display:flex;gap:8px;margin-top:10px}
   </style>
 </head>
 <body>
@@ -40,7 +43,12 @@
       <input id="address" aria-label="웹 주소" placeholder="웹 주소 입력 · example.com" spellcheck="false" autofocus>
       <button class="go" type="submit" title="이동" aria-label="이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button>
     </form>
+    <button id="popups" type="button" title="팝업 관리" aria-label="팝업 관리" aria-expanded="false" aria-controls="popup-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4H4v16h16v-9M14 3h7v7M21 3l-9 9"/></svg></button>
   </div>
+  <section id="popup-panel" class="popup-panel" aria-label="현재 사이트의 팝업 관리" hidden>
+    <p id="popup-host"></p><p id="popup-message"></p><p id="popup-target"></p>
+    <div class="popup-actions"><button id="popup-once" type="button">한 번 허용</button><button id="popup-permission" type="button">이 사이트 항상 허용</button><button id="popup-dismiss" type="button">닫기</button></div>
+  </section>
   <footer class="footer" aria-label="상태 표시줄"><div id="status" class="status" role="status" aria-live="polite">준비</div><button id="blocking" class="shield" type="button" aria-pressed="true" title="광고차단을 켜거나 끄고 현재 페이지를 다시 엽니다.">광고차단 ON</button></footer>
   <script>
     const address = document.getElementById('address');
@@ -50,6 +58,11 @@
     let tabsState = [];
     let tabsSignature = '';
     let latestState = null;
+    document.getElementById('popups').addEventListener('click', () => send({action:'popup_menu',open:!latestState?.popup_menu}));
+    document.getElementById('popup-once').addEventListener('click', () => send({action:'popup_once',id:latestState.active_tab}));
+    document.getElementById('popup-permission').addEventListener('click', () => send({action:latestState.popup_allowed?'popup_revoke':'popup_always',id:latestState.active_tab}));
+    document.getElementById('popup-dismiss').addEventListener('click', () => send({action:'popup_dismiss',id:latestState.active_tab}));
+    document.addEventListener('keydown', event => { if(event.key==='Escape' && latestState?.popup_menu) {send({action:'popup_menu',open:false});document.getElementById('popups').focus();} });
     let drag = null;
     let suppressClick = false;
     document.getElementById('new-tab').addEventListener('click', () => send({action:'new_tab'}));
@@ -152,6 +165,19 @@
     });
     window.updateState = state => {
       latestState = state;
+      const popups = document.getElementById('popups');
+      popups.disabled = !state.popup_host;
+      popups.classList.toggle('has-pending', Boolean(state.popup_target));
+      popups.classList.toggle('is-allowed', state.popup_allowed);
+      popups.title = state.popup_target ? '차단된 팝업 확인' : state.popup_allowed ? '팝업 허용 중 · 관리' : '팝업 관리';
+      popups.setAttribute('aria-label',popups.title);
+      popups.setAttribute('aria-expanded',String(state.popup_menu));
+      document.getElementById('popup-panel').hidden = !state.popup_menu;
+      document.getElementById('popup-host').textContent = state.popup_host || '';
+      document.getElementById('popup-message').textContent = state.popup_target ? '팝업 요청을 보류했습니다.' : state.popup_allowed ? '이 사이트의 팝업을 허용하고 있습니다.' : '차단된 팝업 요청이 없습니다.';
+      const target = document.getElementById('popup-target'); target.textContent = state.popup_target || '자동 팝업은 기본으로 차단합니다.'; target.title = state.popup_target || '';
+      document.getElementById('popup-once').disabled = !state.popup_target;
+      document.getElementById('popup-permission').textContent = state.popup_allowed ? '허용 취소' : '이 사이트 항상 허용';
       currentAddress = state.address;
       renderTabs(state);
       if (activeTab !== state.active_tab || document.activeElement !== address) address.value = state.address;

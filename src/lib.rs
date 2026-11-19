@@ -5,6 +5,8 @@ pub mod tabs;
 #[cfg(windows)]
 pub mod windows_blocking;
 #[cfg(windows)]
+pub mod windows_favicon;
+#[cfg(windows)]
 pub mod windows_links;
 #[cfg(windows)]
 pub mod windows_navigation;

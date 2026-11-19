@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'">
   <title>Plain Browser 주소창</title>
   <style>
     *{box-sizing:border-box}body{margin:0;background:#f3f5f6;color:#25332e;font:13px "Segoe UI","Malgun Gothic",sans-serif;overflow:hidden}
@@ -22,8 +22,8 @@
     .tab-close:hover:not(:disabled){background:#c6dace;color:#173f2c}.tab-add{width:31px;height:30px;padding:5px;margin-bottom:3px;border:0;background:transparent;box-shadow:none}.tab-add svg{width:19px;height:19px}
     .tab-title:active:not(:disabled),.tab-close:active:not(:disabled){transform:none}
     .tab-title:focus-visible,.tab-close:focus-visible{outline:none;box-shadow:inset 0 0 0 1px #23755c}
-    .tab-dot{width:7px;height:7px;border-radius:50%;background:#6c9a80;flex-shrink:0}.tab.loading .tab-dot{width:10px;height:10px;border:2px solid #bdd5c6;border-top-color:#23755c;background:transparent;animation:rotate 1s linear infinite}
-    @media(prefers-reduced-motion:reduce){.tab.loading .tab-dot{animation:none}}
+    .tab-icon{width:16px;height:16px;flex:0 0 16px;display:flex;align-items:center;justify-content:center}.tab-icon img,.tab-icon svg{width:16px;height:16px;object-fit:contain}.tab-icon svg{stroke-width:1.8}.tab.loading .tab-icon{border:2px solid #bdd5c6;border-top-color:#23755c;border-radius:50%;animation:rotate 1s linear infinite}.tab.loading .tab-icon>*{display:none}
+    @media(prefers-reduced-motion:reduce){.tab.loading .tab-icon{animation:none}}
     @media(max-width:760px){.tab-strip{padding-left:10px;padding-right:10px}}
     .bar>button,.bar .go{width:38px;height:38px;padding:0;flex:0 0 38px}
     #popups{position:relative}#popups.has-pending{border-color:#b37718;color:#895800}#popups.has-pending::after{content:'';position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#bd7517}#popups.is-allowed{border-color:#23755c}
@@ -136,7 +136,12 @@
         const select = document.createElement('button');
         select.type = 'button'; select.className = 'tab-title'; select.dataset.tabId = tab.id;
         select.setAttribute('role','tab'); select.setAttribute('aria-selected',String(selected)); select.tabIndex = selected ? 0 : -1; select.title = tab.title;
-        const dot = document.createElement('span'); dot.className = 'tab-dot'; dot.setAttribute('aria-hidden','true');
+        const dot = document.createElement('span'); dot.className = 'tab-icon'; dot.setAttribute('aria-hidden','true');
+        const fallback = () => { dot.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18M12 3c-5 5-5 13 0 18"/></svg>'; };
+        if (tab.favicon && tab.favicon.startsWith('data:image/png;base64,')) {
+          const icon = document.createElement('img'); icon.alt = ''; icon.draggable = false;
+          icon.addEventListener('error', fallback, {once:true}); icon.src = tab.favicon; dot.append(icon);
+        } else fallback();
         const label = document.createElement('span'); label.className = 'tab-label'; label.textContent = tab.title;
         select.append(dot,label);
         const close = document.createElement('button'); close.type = 'button'; close.className = 'tab-close'; close.dataset.tabId = tab.id;

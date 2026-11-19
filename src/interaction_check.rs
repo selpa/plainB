@@ -39,7 +39,7 @@ impl InteractionCheck {
             return Err("interaction check incomplete".into());
         }
         println!(
-            "PASS: native hover, links, history, reorder; square buttons; popup block, allow once, persistent permission, automatic allow, revoke and dismiss."
+            "PASS: native favicon and fallback; hover, links, history, reorder; square buttons; popup block, allow once, persistent permission, automatic allow, revoke and dismiss."
         );
         Ok(())
     }
@@ -126,7 +126,7 @@ impl InteractionCheck {
                 Self::navigate(browser, "http://plain-check.localhost/a");
                 self.step = 1;
             }
-            1 if !active.loading && active.url.ends_with("/a") => {
+            1 if !active.loading && active.url.ends_with("/a") && !active.favicon.is_empty() => {
                 Self::evaluate(
                     browser,
                     &active.view,
@@ -382,7 +382,43 @@ impl InteractionCheck {
                 self.step = 28;
             }
             28 if active.pending_popup.is_none() && !browser.popup_menu => {
-                self.step = 30;
+                Self::evaluate(
+                    browser,
+                    &browser.toolbar,
+                    "(()=>{const i=document.querySelector('.tab.selected .tab-icon img');return Boolean(i && i.complete && i.naturalWidth>0)})()",
+                );
+                self.step = 29;
+            }
+            29 => {
+                if let Some(json) = self.received.take() {
+                    if json != "true" {
+                        self.fail("native favicon not displayed in selected tab");
+                        return;
+                    }
+                    Self::navigate(browser, "http://plain-check.other.test/no-icon");
+                    self.step = 31;
+                }
+            }
+            31 if !active.loading && active.url.ends_with("/no-icon") => {
+                if !active.favicon.is_empty() {
+                    self.fail("previous page favicon retained");
+                    return;
+                }
+                Self::evaluate(
+                    browser,
+                    &browser.toolbar,
+                    "Boolean(document.querySelector('.tab.selected .tab-icon svg'))",
+                );
+                self.step = 32;
+            }
+            32 => {
+                if let Some(json) = self.received.take() {
+                    if json != "true" {
+                        self.fail("missing favicon fallback");
+                        return;
+                    }
+                    self.step = 30;
+                }
             }
             _ => {}
         }

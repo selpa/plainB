@@ -8,7 +8,7 @@ use plain_browser::{
     blocking::AdBlocker,
     popups,
     tabs::{TabId, Tabs},
-    windows_blocking, windows_links, windows_navigation,
+    windows_blocking, windows_favicon, windows_links, windows_navigation,
 };
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, cell::RefCell, error::Error, path::PathBuf, rc::Rc};
@@ -81,12 +81,14 @@ enum PageEvent {
     OpenLink { url: String, user_initiated: bool },
     OpenExternal(String),
     Hover(String),
+    Favicon { source: String, image: String },
 }
 struct Tab {
     // Unregister callbacks before dropping this page's controller.
     _requests: windows_blocking::RequestHook,
     _links: windows_links::LinkHook,
     _navigation: windows_navigation::NavigationHook,
+    _favicon: windows_favicon::FaviconHook,
     view: WebView,
     intent: Rc<windows_navigation::NavigationIntent>,
     url: String,
@@ -96,12 +98,14 @@ struct Tab {
     hovered_link: String,
     pending_popup: Option<String>,
     popup_opened: u8,
+    favicon: String,
 }
 #[derive(Serialize)]
 struct TabSummary<'a> {
     id: TabId,
     title: &'a str,
     loading: bool,
+    favicon: &'a str,
 }
 #[derive(Serialize)]
 struct ToolbarState<'a> {
@@ -173,7 +177,9 @@ fn create_tab(
     let builder = if checking {
         builder.with_custom_protocol("plain-check".into(),|_,request|{
         let label=request.uri().path().trim_start_matches('/');
-        let body=format!("<!doctype html><meta charset='utf-8'><title>Tab {label}</title><h1>Tab {label}</h1><input id='note' value='{label}'><p><a id='same' href='/same'>Same site</a></p><p><a id='external' href='http://plain-check.other.test/external'>Other site</a></p><p><a id='blank' href='http://plain-check.other.test/blank' target='_blank'>Other site blank</a></p>");
+        use base64::Engine;
+        let favicon = if label == "no-icon" { "<link rel=\"icon\" href=\"data:,\">".to_owned() } else { format!("<link rel=\"icon\" href=\"data:image/png;base64,{}\">",base64::engine::general_purpose::STANDARD.encode(include_bytes!("../assets/plain-browser.png"))) };
+        let body=format!("<!doctype html><meta charset='utf-8'><title>Tab {label}</title>{favicon}<h1>Tab {label}</h1><input id='note' value='{label}'><p><a id='same' href='/same'>Same site</a></p><p><a id='external' href='http://plain-check.other.test/external'>Other site</a></p><p><a id='blank' href='http://plain-check.other.test/blank' target='_blank'>Other site blank</a></p>");
         wry::http::Response::builder().header("Content-Type","text/html; charset=utf-8").body(body.into_bytes().into()).unwrap()
     })
     } else {
@@ -198,6 +204,10 @@ fn create_tab(
         },
     )?;
     let links = proxy.clone();
+    let icons = proxy.clone();
+    let favicon_hook = windows_favicon::install(&view, move |source, image| {
+        let _ = icons.send_event(BrowserEvent::Page(id, PageEvent::Favicon { source, image }));
+    })?;
     let link_hook = windows_links::install(&view, move |request| {
         let _ = links.send_event(BrowserEvent::Page(
             id,
@@ -216,6 +226,7 @@ fn create_tab(
         _requests: requests,
         _links: link_hook,
         _navigation: navigation_hook,
+        _favicon: favicon_hook,
         view,
         intent,
         url: HOME_URL.into(),
@@ -225,6 +236,7 @@ fn create_tab(
         hovered_link: String::new(),
         pending_popup: None,
         popup_opened: 0,
+        favicon: String::new(),
     })
 }
 
@@ -354,6 +366,7 @@ impl Browser {
                     id,
                     title: &tab.title,
                     loading: tab.loading,
+                    favicon: &tab.favicon,
                 })
                 .collect(),
             address: display_address(&active.url),
@@ -562,6 +575,7 @@ impl Browser {
         };
         match event {
             PageEvent::Navigation(url) => {
+                tab.favicon.clear();
                 tab.pending_popup = None;
                 tab.popup_opened = 0;
                 tab.hovered_link.clear();
@@ -580,6 +594,11 @@ impl Browser {
                     "새 탭".into()
                 } else {
                     title.chars().take(150).collect()
+                }
+            }
+            PageEvent::Favicon { source, image } => {
+                if tab.url == source {
+                    tab.favicon = image;
                 }
             }
             PageEvent::Notice(message) => tab.status = message,

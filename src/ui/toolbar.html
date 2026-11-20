@@ -10,10 +10,10 @@
     .bar{height:60px;padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #dce3df}
     button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:38px;width:auto;padding:0 11px;border:1px solid #c4d0ca;border-radius:8px;background:#fff;color:#254b3c;font:600 13px "Segoe UI","Malgun Gothic",sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px #1b3b2910;transition:background .12s,border-color .12s,transform .12s}button svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}button:hover:not(:disabled){background:#dceee4;border-color:#378261;color:#123e29}button:active:not(:disabled){transform:translateY(1px);background:#cce5d7}button:focus-visible{outline:2px solid #23755c;outline-offset:2px}button:disabled{color:#9aa89f;background:#edf1ee;border-color:#dde4df;box-shadow:none;cursor:default}
     form{display:flex;gap:8px;flex:1;min-width:0;margin-left:6px}input{width:100%;min-width:0;height:38px;border:1px solid #c8d4cd;border-radius:8px;background:white;padding:0 12px;font:14px "Segoe UI","Malgun Gothic",sans-serif;outline:none}input:focus{border-color:#23755c;box-shadow:0 0 0 2px #23755c22}.go{background:#23755c;border-color:#23755c;color:white;padding:0 14px}.go:hover:not(:disabled){background:#16563f;border-color:#16563f;color:#fff}.status{height:30px;padding:4px 16px;color:#617368;font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-    .footer{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;height:30px;gap:8px;border-top:1px solid #dce3df;background:#f3f5f6}.footer .status{flex:1;min-width:0;height:auto;padding:0 16px}.shield{height:24px;padding:0 10px;margin-right:12px;border-color:transparent;background:transparent;box-shadow:none;font-size:12px;color:#23755c}.shield[aria-pressed="false"]{color:#896023}.is-loading svg{animation:rotate 1s linear infinite}@keyframes rotate{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.is-loading svg{animation:none}button{transition:none}}
+    .footer{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;height:30px;gap:8px;border-top:1px solid #dce3df;background:#f3f5f6}.footer .status{flex:1;min-width:0;height:auto;padding:0 16px}.shield{height:24px;padding:0 3px;margin-right:12px;gap:7px;border:0;border-radius:4px;background:transparent;box-shadow:none;font-size:12px;color:#46594e}.shield:hover:not(:disabled){background:transparent;color:#25332e}.shield:active:not(:disabled){transform:none;background:transparent}.switch-track{position:relative;width:30px;height:16px;flex:0 0 30px;border-radius:9px;background:#8b9690;transition:background .15s}.switch-track::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .15s}.shield[aria-checked="true"] .switch-track{background:#23755c}.shield[aria-checked="true"] .switch-track::after{transform:translateX(14px)}.switch-state{min-width:24px;text-align:left;font-size:11px}@media(prefers-reduced-motion:reduce){.switch-track,.switch-track::after{transition:none}}.is-loading svg{animation:rotate 1s linear infinite}@keyframes rotate{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.is-loading svg{animation:none}button{transition:none}}
     .tab-strip{height:42px;display:flex;align-items:flex-end;gap:8px;padding:5px 14px 0;background:#e7ede9;border-bottom:1px solid #cdd8d0}
-    .tab-list{display:flex;gap:5px;flex:0 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#b8c8bd transparent;user-select:none;touch-action:none}
-    .tab{display:flex;align-items:center;flex:0 0 190px;max-width:220px;min-width:130px;height:34px;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:#dce5df;color:#607567}
+    .tab-list{display:flex;gap:5px;flex:0 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;user-select:none;touch-action:none}
+    .tab{display:flex;align-items:center;flex:0 1 190px;max-width:190px;min-width:96px;height:34px;border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:#dce5df;color:#607567}
     .tab.selected{background:#f3f5f6;border-color:#c4d0ca;color:#204a36}
     .tab.dragging{opacity:.8;border-color:#23755c;background:#d4eadc}.tab:focus-within{border-color:#23755c}.tab-title{cursor:grab}.tab.dragging .tab-title{cursor:grabbing}
     .tab-title{height:33px;flex:1;min-width:0;justify-content:flex-start;padding:0 9px;border:0;border-radius:7px 0 0 0;box-shadow:none;background:transparent;font-size:12px;color:inherit}
@@ -28,12 +28,22 @@
     .bar>button,.bar .go{width:38px;height:38px;padding:0;flex:0 0 38px}
     #popups{position:relative}#popups.has-pending{border-color:#b37718;color:#895800}#popups.has-pending::after{content:'';position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#bd7517}#popups.is-allowed{border-color:#23755c}
     .popup-panel{position:absolute;top:102px;left:0;right:0;height:170px;padding:12px 16px;background:#f3f5f6;border-bottom:1px solid #c4d0ca}.popup-panel[hidden]{display:none}.popup-panel p{margin:0 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.popup-actions{display:flex;gap:8px;margin-top:10px}
+    .footer{border-top:0}.footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:#dce3df;pointer-events:none}
+    .footer.is-page-loading::before{background:linear-gradient(to right,transparent 0%,#23755c 40%,#23755c 60%,transparent 100%);background-size:35% 100%;background-repeat:no-repeat;animation:page-loading-line 1.4s linear infinite}
+    @keyframes page-loading-line{from{background-position:-55% 0}to{background-position:155% 0}}
+    @media(prefers-reduced-motion:reduce){.footer.is-page-loading::before{animation:none;background:#23755c}}
+    .settings-button{width:24px;height:24px;margin-left:10px;padding:3px;border:0;background:transparent;box-shadow:none;color:#617368;border-radius:5px}.settings-button svg{width:22px;height:22px;stroke-width:1;vector-effect:non-scaling-stroke}.settings-button svg>*{vector-effect:non-scaling-stroke}.settings-button:active:not(:disabled){transform:none}.settings-button:focus-visible{outline-offset:-2px}.bar .settings-button{margin-left:0}.footer .status{padding-left:16px}
+    .tab-list::-webkit-scrollbar{display:none}.tab-scroll{width:24px;height:30px;padding:3px;margin-bottom:3px;border:0;background:transparent;box-shadow:none}.tab-scroll svg{width:16px;height:16px}.tab-scroll[hidden]{display:none}.tab-scroll:active:not(:disabled){transform:none}.tab-scroll:focus-visible{outline-offset:-2px}
+    .tab-strip .settings-button{width:30px;height:30px;flex:0 0 30px;margin:0 0 3px auto;padding:4px}
   </style>
 </head>
 <body>
   <div class="tab-strip">
+    <button id="tabs-left" class="tab-scroll" type="button" title="왼쪽 탭 보기" aria-label="왼쪽 탭 보기" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
     <div id="tabs" class="tab-list" role="tablist" aria-label="열린 탭"></div>
+    <button id="tabs-right" class="tab-scroll" type="button" title="오른쪽 탭 보기" aria-label="오른쪽 탭 보기" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
     <button id="new-tab" class="tab-add" type="button" title="새 탭" aria-label="새 탭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="settings" class="settings-button" type="button" title="설정" aria-label="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.19 3.74L13.03 1.55L15.05 1.95L15.91 4.68L17.27 5.58L20.12 5.34L21.26 7.05L19.94 9.59L20.26 11.19L22.45 13.03L22.05 15.05L19.32 15.91L18.42 17.27L18.66 20.12L16.95 21.26L14.41 19.94L12.81 20.26L10.97 22.45L8.95 22.05L8.09 19.32L6.73 18.42L3.88 18.66L2.74 16.95L4.06 14.41L3.74 12.81L1.55 10.97L1.95 8.95L4.68 8.09L5.58 6.73L5.34 3.88L7.05 2.74L9.59 4.06Z"/><circle cx="12" cy="12" r="3.5"/></svg></button>
   </div>
   <div class="bar">
     <button id="back" type="button" title="이전 페이지" aria-label="이전 페이지" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-7 7 7 7M4 12h16"/></svg></button>
@@ -44,20 +54,47 @@
       <button class="go" type="submit" title="이동" aria-label="이동"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7"/></svg></button>
     </form>
     <button id="popups" type="button" title="팝업 관리" aria-label="팝업 관리" aria-expanded="false" aria-controls="popup-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4H4v16h16v-9M14 3h7v7M21 3l-9 9"/></svg></button>
+    
   </div>
   <section id="popup-panel" class="popup-panel" aria-label="현재 사이트의 팝업 관리" hidden>
     <p id="popup-host"></p><p id="popup-message"></p><p id="popup-target"></p>
     <div class="popup-actions"><button id="popup-once" type="button">한 번 허용</button><button id="popup-permission" type="button">이 사이트 항상 허용</button><button id="popup-dismiss" type="button">닫기</button></div>
   </section>
-  <footer class="footer" aria-label="상태 표시줄"><div id="status" class="status" role="status" aria-live="polite">준비</div><button id="blocking" class="shield" type="button" aria-pressed="true" title="광고차단을 켜거나 끄고 현재 페이지를 다시 엽니다.">광고차단 ON</button></footer>
+  <footer class="footer" aria-label="상태 표시줄"><div id="status" class="status" role="status" aria-live="polite">준비</div><button id="blocking" class="shield" type="button" role="switch" aria-checked="true" aria-label="광고차단" title="광고차단을 켜거나 끄고 현재 페이지를 다시 엽니다."><span>광고차단</span><span class="switch-track" aria-hidden="true"></span><span id="blocking-state" class="switch-state" aria-hidden="true">ON</span></button></footer>
   <script>
     const address = document.getElementById('address');
     const send = command => window.ipc.postMessage(JSON.stringify(command));
     const tabList = document.getElementById('tabs');
+    const tabsLeft = document.getElementById('tabs-left'), tabsRight = document.getElementById('tabs-right');
+    function updateTabArrows() {
+      tabsLeft.disabled = tabList.scrollLeft <= 1;
+      tabsRight.disabled = tabList.scrollLeft + tabList.clientWidth >= tabList.scrollWidth - 1;
+    }
+    function layoutTabs(revealSelected = false) {
+      tabsLeft.hidden = tabsRight.hidden = true;
+      const overflow = tabList.scrollWidth > tabList.clientWidth + 1;
+      tabsLeft.hidden = tabsRight.hidden = !overflow;
+      if (revealSelected) tabList.querySelector('.tab.selected')?.scrollIntoView({block:'nearest',inline:'nearest'});
+      updateTabArrows();
+    }
+    tabsLeft.addEventListener('click', () => tabList.scrollBy({left:-Math.max(96,tabList.clientWidth*.7)}));
+    tabsRight.addEventListener('click', () => tabList.scrollBy({left:Math.max(96,tabList.clientWidth*.7)}));
+    tabList.addEventListener('scroll', updateTabArrows);
+    tabList.addEventListener('wheel', event => {
+      if (event.ctrlKey || tabList.scrollWidth <= tabList.clientWidth) return;
+      event.preventDefault(); tabList.scrollLeft += Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+    }, {passive:false});
+    new ResizeObserver(() => layoutTabs(true)).observe(document.querySelector('.tab-strip'));
     let activeTab = null;
     let tabsState = [];
     let tabsSignature = '';
     let latestState = null;
+    document.getElementById('settings').addEventListener('click', () => {
+      const status = document.getElementById('status');
+      status.setAttribute('aria-live','polite');
+      status.textContent = '색상 설정 화면은 준비 중입니다.';
+      status.title = '';
+    });
     document.getElementById('popups').addEventListener('click', () => send({action:'popup_menu',open:!latestState?.popup_menu}));
     document.getElementById('popup-once').addEventListener('click', () => send({action:'popup_once',id:latestState.active_tab}));
     document.getElementById('popup-permission').addEventListener('click', () => send({action:latestState.popup_allowed?'popup_revoke':'popup_always',id:latestState.active_tab}));
@@ -151,7 +188,7 @@
         group.append(select,close); fragment.append(group);
       }
       tabList.replaceChildren(fragment);
-      if (activeTab !== state.active_tab) tabList.querySelector(`[data-tab-id="${state.active_tab}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});
+      layoutTabs(activeTab !== state.active_tab);
     }
     document.getElementById('blocking').addEventListener('click', () => send({action: 'toggle_blocking'}));
     let currentAddress = '';
@@ -190,6 +227,9 @@
       document.getElementById('back').disabled = !state.back;
       document.getElementById('forward').disabled = !state.forward;
       const status = document.getElementById('status');
+      const footer = document.querySelector('.footer');
+      footer.classList.toggle('is-page-loading', state.loading);
+      footer.setAttribute('aria-busy', String(state.loading));
       status.setAttribute('aria-live',state.hovered_link ? 'off' : 'polite');
       status.textContent = state.hovered_link || state.status;
       status.title = state.hovered_link || '';
@@ -197,8 +237,8 @@
       reload.classList.toggle('is-loading', state.loading);
       reload.setAttribute('aria-busy', String(state.loading));
       const blocking = document.getElementById('blocking');
-      blocking.textContent = `광고차단 ${state.blocking_enabled ? 'ON' : 'OFF'}`;
-      blocking.setAttribute('aria-pressed', String(state.blocking_enabled));
+      document.getElementById('blocking-state').textContent = state.blocking_enabled ? 'ON' : 'OFF';
+      blocking.setAttribute('aria-checked', String(state.blocking_enabled));
     };
     send({action: 'ready'});
   </script>

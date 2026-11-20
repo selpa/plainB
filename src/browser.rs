@@ -581,13 +581,13 @@ impl Browser {
                 tab.hovered_link.clear();
                 tab.url = url;
                 tab.loading = true;
-                tab.status = "페이지를 여는 중…".into();
+                tab.status.clear();
             }
             PageEvent::Loaded(url) => {
                 tab.hovered_link.clear();
                 tab.url = url;
                 tab.loading = false;
-                tab.status = "완료".into();
+                tab.status.clear();
             }
             PageEvent::Title(title) => {
                 tab.title = if title.trim().is_empty() {
